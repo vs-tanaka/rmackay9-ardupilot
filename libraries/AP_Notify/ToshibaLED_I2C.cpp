@@ -61,6 +61,7 @@ bool ToshibaLED_I2C::hw_init()
 // set_rgb - set color as a combination of red, green and blue values
 bool ToshibaLED_I2C::hw_set_rgb(uint8_t red, uint8_t green, uint8_t blue)
 {
+    rgb = {red, green, blue};
     _need_update = true;
     return true;
 }
