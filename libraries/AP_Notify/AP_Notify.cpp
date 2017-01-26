@@ -85,7 +85,7 @@ struct AP_Notify::notify_events_type AP_Notify::events;
 #else
     AP_BoardLED boardled;
 #endif
-    ToshibaLED_PX4 toshibaled;
+    ToshibaLED_I2C toshibaled;
     Display display;
 
 #if AP_NOTIFY_SOLO_TONES == 1
