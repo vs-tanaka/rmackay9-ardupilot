@@ -820,6 +820,25 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 {
     uint8_t result = MAV_RESULT_FAILED;         // assume failure.  Each messages id is responsible for return ACK or NAK if required
 
+//add tanaka
+    {
+    
+        if(msg->msgid != MAVLINK_MSG_ID_HEARTBEAT)
+        {
+	    char buffer[100];
+            int i;
+            unsigned char *pmsg;
+            pmsg = (unsigned char *)msg;
+            for(i = 0; i < 20; i++)
+            {
+               printf("%02x,", pmsg[i]);
+            }
+            printf("\n");
+        }
+    
+    }
+// end	
+
     switch (msg->msgid) {
 
     case MAVLINK_MSG_ID_HEARTBEAT:      // MAV ID: 0
@@ -841,6 +860,9 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
             mavlink_msg_command_ack_send_buf(msg, chan, MAVLINK_MSG_ID_SET_MODE, MAV_RESULT_FAILED);
         }
 #else
+	
+   
+
         handle_set_mode(msg, FUNCTOR_BIND(&copter, &Copter::gcs_set_mode, bool, uint8_t));
 #endif
         break;
