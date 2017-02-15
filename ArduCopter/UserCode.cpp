@@ -40,5 +40,17 @@ void Copter::userhook_SlowLoop()
 void Copter::userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
+printf("1hz loop called    \n");
+    telemetry.send_text("from userhook_SuperSlowLoop\n");
+    char cmd[100];
+
+    if (telemetry.recv_command(cmd) != 0)
+    {
+
+        printf("received command from Pc %s \n", cmd);
+    }
+
+
+
 }
 #endif
