@@ -39,9 +39,11 @@ public:
 
     // update - provide an opportunity to read/send telemetry
     void update();
+    int recv_command(char *str);
+
 
     // send text
-    void send_text(const char *str) {}
+    void send_text(const char *str);
     void send_text_fmt(const char *str, const char *fmt, ...) {}
 
 protected:

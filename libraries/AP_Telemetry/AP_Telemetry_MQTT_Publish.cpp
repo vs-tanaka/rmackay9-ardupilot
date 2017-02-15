@@ -27,9 +27,9 @@
 #define TIMEOUT     10000L
 
 volatile MQTTAsync_token deliveredtoken;
-MQTTAsync client;
 
 int finished = 0;
+int connected = 0;
 char msg_payload[100];
 
 void connlost(void *context, char *cause)
@@ -62,20 +62,20 @@ void onDisconnect(void* context, MQTTAsync_successData* response)
 
 void onSend(void* context, MQTTAsync_successData* response)
 {
-	MQTTAsync client = (MQTTAsync)context;
-	MQTTAsync_disconnectOptions opts = MQTTAsync_disconnectOptions_initializer;
-	int rc;
+//	MQTTAsync client = (MQTTAsync)context;
+//	MQTTAsync_disconnectOptions opts = MQTTAsync_disconnectOptions_initializer;
+//	int rc;
 
 	printf("Message with token value %d delivery confirmed\n", response->token);
 
-	opts.onSuccess = onDisconnect;
-	opts.context = client;
+//	opts.onSuccess = onDisconnect;
+//	opts.context = client;
 
-	if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS)
-	{
-		printf("Failed to start sendMessage, return code %d\n", rc);
-		exit(EXIT_FAILURE);
-	}
+//	if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS)
+//	{
+//		printf("Failed to start sendMessage, return code %d\n", rc);
+//		//exit(EXIT_FAILURE);
+//	}
 }
 
 
@@ -88,31 +88,60 @@ void onConnectFailure(void* context, MQTTAsync_failureData* response)
 
 void onConnect(void* context, MQTTAsync_successData* response)
 {
+	//MQTTAsync client = (MQTTAsync)context;
+	//MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
+	//MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
+	//int rc;
+
+	printf("Successful connection new\n");
+	
+	//opts.onSuccess = onSend;
+	//opts.context = client;
+
+	//pubmsg.payload = msg_payload;
+	//pubmsg.payloadlen = strlen(msg_payload);
+	//pubmsg.qos = QOS;
+	//pubmsg.retained = 0;
+	deliveredtoken = 0;
+        connected = 1;
+
+	//if ((rc = MQTTAsync_sendMessage(client, TOPIC, &pubmsg, &opts)) != MQTTASYNC_SUCCESS)
+	//{
+	//	printf("Failed to start sendMessage, return code %d\n", rc);
+		//exit(EXIT_FAILURE);
+	//}
+}
+
+void start_send_text(void* context, const char *str)
+{
 	MQTTAsync client = (MQTTAsync)context;
 	MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
 	MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
 	int rc;
 
-	printf("Successful connection\n");
+	printf("start_send_text start\n");
 	
 	opts.onSuccess = onSend;
 	opts.context = client;
 
-	pubmsg.payload = msg_payload;
-	pubmsg.payloadlen = strlen(msg_payload);
+	pubmsg.payload = (char *)str;
+	pubmsg.payloadlen = strlen(str);
 	pubmsg.qos = QOS;
 	pubmsg.retained = 0;
 	deliveredtoken = 0;
-
+      
 	if ((rc = MQTTAsync_sendMessage(client, TOPIC, &pubmsg, &opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start sendMessage, return code %d\n", rc);
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
 	}
+
 }
 
-void start_send(char *buf)
+void *start_connect()
 {
+	MQTTAsync client;
+
 	MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
 	MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
 	MQTTAsync_token token;
@@ -122,8 +151,7 @@ void start_send(char *buf)
 
 	MQTTAsync_setCallbacks(client, NULL, connlost, NULL, NULL);
         
-        strcpy(msg_payload, buf);
-
+    
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;
 	conn_opts.onSuccess = onConnect;
@@ -134,6 +162,8 @@ void start_send(char *buf)
 		printf("Failed to start connect, return code %d\n", rc);
 		//exit(EXIT_FAILURE);
 	}
+
+        return client;
 
 
 

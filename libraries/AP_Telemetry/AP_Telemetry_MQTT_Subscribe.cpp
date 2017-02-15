@@ -32,6 +32,8 @@ int sub_connect_stat = 0;
 int subscribed = 0;
 int finished_sub = 0;
 MQTTAsync client_sub;
+char recv_msg[200];
+int  recv_msg_len = 0;
 
 void connlost_sub(void *context, char *cause)
 {
@@ -71,6 +73,11 @@ int msgarrvd_sub(void *context, char *topicName, int topicLen, MQTTAsync_message
         putchar(*payloadptr++);
     }
     putchar('\n');
+
+    memcpy(recv_msg, message->payload, message->payloadlen);
+    recv_msg[message->payloadlen] = 0;
+    recv_msg_len = message->payloadlen;
+
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
     return 1;
@@ -129,6 +136,21 @@ void onConnect_sub(void* context, MQTTAsync_successData* response)
 }
 
 
+int recv_data(char *str)
+{
+    // we needs semaphore
+    int ret = 0;
+    if(recv_msg_len != 0)
+    {
+        strcpy(str, recv_msg);
+        ret = 1;
+        recv_msg_len = 0;
+    } else {
+        strcpy(str, "");
+        ret = 0;        
+    }
+    return ret;
+}
 
 int start_subscribe(void)
 {

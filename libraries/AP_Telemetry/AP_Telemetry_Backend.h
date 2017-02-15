@@ -28,8 +28,10 @@ public:
     // update - provide an opportunity to read/send telemetry
     virtual void update() = 0;
 
+    virtual int recv_message(char *str){return 0;}
+
     // send text
-    virtual void send_text(const char *str) {}
+    virtual void send_text(const char *str){};
     virtual void send_text_fmt(const char *str, const char *fmt, ...) {}
 
 protected:
