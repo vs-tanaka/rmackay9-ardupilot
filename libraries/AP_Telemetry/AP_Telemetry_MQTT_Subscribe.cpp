@@ -17,6 +17,17 @@
 #include <stdio.h>
 #include "../Mqtt/MQTTAsync.h"
 
+/// @cond EXCLUDE
+#if defined(__cplusplus)
+ extern "C" {
+#endif
+
+#include "../Mqtt/LinkedList.h"
+
+#ifdef __cplusplus
+     }
+#endif
+
 
 #define ADDRESS     "tcp://localhost:1883"
 #define CLIENTID    "ExampleClientSub"
@@ -31,9 +42,11 @@ int disc_finished = 0;
 int sub_connect_stat = 0;
 int subscribed = 0;
 int finished_sub = 0;
-MQTTAsync client_sub;
-char recv_msg[200];
-int  recv_msg_len = 0;
+//MQTTAsync client_sub;
+
+List* recv_msg_list;
+
+
 
 void connlost_sub(void *context, char *cause)
 {
@@ -74,11 +87,10 @@ int msgarrvd_sub(void *context, char *topicName, int topicLen, MQTTAsync_message
     }
     putchar('\n');
 
-    memcpy(recv_msg, message->payload, message->payloadlen);
-    recv_msg[message->payloadlen] = 0;
-    recv_msg_len = message->payloadlen;
 
-    MQTTAsync_freeMessage(&message);
+    ListAppend(recv_msg_list, message, sizeof(MQTTAsync_message));
+
+    //MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
     return 1;
 }
@@ -127,11 +139,15 @@ void onConnect_sub(void* context, MQTTAsync_successData* response)
 	opts.context = client;
 
 	deliveredtoken_sub = 0;
+        sub_connect_stat = 2;
+        finished_sub = 0;
+        disc_finished = 0;
 
 	if ((rc = MQTTAsync_subscribe(client, TOPIC, QOS, &opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start subscribe, return code %d\n", rc);
 		//exit(EXIT_FAILURE);
+               finished_sub = 1;
 	}
 }
 
@@ -140,11 +156,23 @@ int recv_data(char *str)
 {
     // we needs semaphore
     int ret = 0;
-    if(recv_msg_len != 0)
+    MQTTAsync_message *message;
+
+    
+    if(recv_msg_list->count != 0)
     {
-        strcpy(str, recv_msg);
-        ret = 1;
-        recv_msg_len = 0;
+        message = (MQTTAsync_message*)ListPopTail(recv_msg_list);
+        if(message != nullptr) 
+        {
+            strncpy(str, message->payload, message->payloadlen);
+            str[message->payloadlen] = 0;
+            MQTTAsync_freeMessage(&message);
+
+            ret = 1;
+        } else {
+            strcpy(str, "");
+            ret = 0;   
+        }
     } else {
         strcpy(str, "");
         ret = 0;        
@@ -152,9 +180,16 @@ int recv_data(char *str)
     return ret;
 }
 
+void init_subscribe(void)
+{
+
+    recv_msg_list = ListInitialize();
+
+}
+
 int start_subscribe(void)
 {
-	//MQTTAsync client;
+	MQTTAsync client;
 
 	MQTTAsync_disconnectOptions disc_opts = MQTTAsync_disconnectOptions_initializer;
 	MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
@@ -163,19 +198,20 @@ int start_subscribe(void)
 	int ch;
 	MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
 
-	MQTTAsync_create(&client_sub, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+	MQTTAsync_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
 
-	MQTTAsync_setCallbacks(client_sub, NULL, connlost_sub, msgarrvd_sub, NULL);
+	MQTTAsync_setCallbacks(client, NULL, connlost_sub, msgarrvd_sub, NULL);
 
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;
 	conn_opts.onSuccess = onConnect_sub;
 	conn_opts.onFailure = onConnectFailure_sub;
-	conn_opts.context = client_sub;
+	conn_opts.context = client;
         sub_connect_stat = 1;
-	if ((rc = MQTTAsync_connect(client_sub, &conn_opts)) != MQTTASYNC_SUCCESS)
+	if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start connect, return code %d\n", rc);
+                finished_sub = 1;
 		//exit(EXIT_FAILURE);
 	}
          return 0;

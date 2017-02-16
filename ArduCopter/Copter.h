@@ -143,6 +143,7 @@ public:
     friend class AP_AdvancedFailsafe_Copter;
 #endif
     friend class AP_Arming_Copter;
+   
 
     Copter(void);
 

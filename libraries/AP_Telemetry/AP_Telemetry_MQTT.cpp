@@ -21,6 +21,12 @@ extern const AP_HAL::HAL& hal;
 extern void start_send(char *buf);
 extern int finished;
 extern int connected;
+
+extern int disc_finished;
+extern int sub_connect_stat;
+extern int subscribed;
+extern int finished_sub;
+
 extern MQTTAsync client;
 extern int start_subscribe(void);
 extern void *start_connect();
@@ -28,12 +34,14 @@ extern int recv_data(char *str);
 
 extern void start_send_text(void* context, const char *str);
 extern int sub_connect_stat;
+extern void init_subscribe();
 
 AP_Telemetry_MQTT::AP_Telemetry_MQTT(AP_Telemetry &frontend, AP_HAL::UARTDriver* uart) :
         AP_Telemetry_Backend(frontend, uart)
-    {
+{
 
-printf("AP_Telemetry_MQTT");
+    printf("AP_Telemetry_MQTT");
+    init_subscribe();
 
 }
 
@@ -55,7 +63,8 @@ int AP_Telemetry_MQTT::recv_message(char *str)
 {
     int ret;
     ret = 0;
-    if((stage_sub == 1) && (sub_connect_stat == 1))
+    if((stage_sub == 1) && (sub_connect_stat == 2) && (finished_sub == 0) &&
+       (disc_finished == 0))
     {
         ret = recv_data(str);
     }
@@ -128,6 +137,20 @@ void AP_Telemetry_MQTT::update()
                     }
                     break;
                 case 1:
+                    if((finished_sub == 1) || (disc_finished == 1))
+                    {
+                        connect_timer_sub = 10;
+                        stage_sub = 2;
+                    }
+                    break;
+                case 2:
+                    if(connect_timer_sub > 0)
+                    {
+                        connect_timer_sub--;
+                    } else {
+                        sub_connect_stat = 0;
+                        stage_sub = 0;
+                    }
                     break;
                     
             }

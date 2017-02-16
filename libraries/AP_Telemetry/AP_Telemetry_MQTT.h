@@ -26,6 +26,7 @@ public:
     int stage_sub = 0;
     void *client;
     int connect_timer = 0;
+    int connect_timer_sub = 0;
     AP_Telemetry_MQTT(AP_Telemetry &frontend, AP_HAL::UARTDriver* uart);
 
     // update - provide an opportunity to read/send telemetry

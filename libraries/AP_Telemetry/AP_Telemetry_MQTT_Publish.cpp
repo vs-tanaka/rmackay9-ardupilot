@@ -66,7 +66,7 @@ void onSend(void* context, MQTTAsync_successData* response)
 //	MQTTAsync_disconnectOptions opts = MQTTAsync_disconnectOptions_initializer;
 //	int rc;
 
-	printf("Message with token value %d delivery confirmed\n", response->token);
+	//printf("Message with token value %d delivery confirmed\n", response->token);
 
 //	opts.onSuccess = onDisconnect;
 //	opts.context = client;
@@ -119,7 +119,7 @@ void start_send_text(void* context, const char *str)
 	MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
 	int rc;
 
-	printf("start_send_text start\n");
+	//printf("start_send_text start\n");
 	
 	opts.onSuccess = onSend;
 	opts.context = client;
