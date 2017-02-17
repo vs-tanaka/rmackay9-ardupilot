@@ -15,7 +15,7 @@
 
 #include "AP_Telemetry_MQTT.h"
 #include <stdio.h>
-#include "../Mqtt/MQTTAsync.h"
+#include "../../modules/Mqtt/MQTTAsync.h"
 extern const AP_HAL::HAL& hal;
 
 extern void start_send(char *buf);

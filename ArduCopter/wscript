@@ -34,14 +34,22 @@ def build(bld):
             'AP_Beacon',
             'AP_Arming',
             'AP_Telemetry',
-            'Mqtt',
+        ],
+    )
+
+    vehicle = bld.path.name
+    bld.ap_stlib(
+        name=vehicle + '_mods',
+        ap_vehicle=vehicle,
+        ap_libraries=[
+            '../modules/Mqtt',
         ],
     )
 
     bld.ap_program(
         program_name='arducopter',
         program_groups=['bin', 'copter'],
-        use=vehicle + '_libs',
+        use=[vehicle + '_libs', vehicle + '_mods'],
         defines=['FRAME_CONFIG=MULTICOPTER_FRAME','USERHOOK_SUPERSLOWLOOP=1'],
         )
 
