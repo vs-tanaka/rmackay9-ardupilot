@@ -18,6 +18,16 @@
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_SerialManager/AP_SerialManager.h>
 #include "AP_Telemetry_Backend.h"
+    //static inline void byte_copy_4(char *dst, const char *src)
+   // {
+//	dst[0] = src[0];
+//	dst[1] = src[1];
+//	dst[2] = src[2];
+//	dst[3] = src[3];
+  //  }
+
+    //#define _mav_put_uint8_t(buf, wire_offset, b) buf[wire_offset] = (uint8_t)b
+    //#define _mav_put_uint32_t(buf, wire_offset, b) byte_copy_4(&buf[wire_offset], (const char *)&b)
 
 class AP_Telemetry_MQTT : public AP_Telemetry_Backend
 {
@@ -32,7 +42,10 @@ public:
     // update - provide an opportunity to read/send telemetry
     void update() override;
     void send_text(const char *str) override;
-    int recv_message(char *str) override;
+    int recv_mavlink_message(mavlink_message_t *msg) override;
+    
+ 
+
 
 private:
 

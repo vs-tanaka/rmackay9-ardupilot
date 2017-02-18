@@ -53,13 +53,13 @@ void AP_Telemetry::send_text(const char *str)
 }
 
 
-int AP_Telemetry::recv_command(char *str) 
+int AP_Telemetry::recv_mavlink_message(mavlink_message_t *msg) 
 {
     int ret;
     ret = 0;
     for (uint8_t i=0; i<AP_TELEMETRY_MAX_INSTANCES; i++) {
         if (_drivers[i] != nullptr) {
-            ret = _drivers[i]->recv_message(str);
+            ret = _drivers[i]->recv_mavlink_message(msg);
         }
     }
     return ret;
