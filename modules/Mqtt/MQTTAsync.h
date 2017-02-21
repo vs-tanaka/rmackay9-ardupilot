@@ -208,8 +208,7 @@ typedef struct
 	/** The length of the MQTT message payload in bytes. */
 	int payloadlen;
 	/** A pointer to the payload of the MQTT message. */
-        char* payload;
-//	void* payload;
+	void* payload;
 	/** 
      * The quality of service (QoS) assigned to the message. 
      * There are three levels of QoS:

@@ -80,7 +80,10 @@ int msgarrvd_sub(void *context, char *topicName, int topicLen, MQTTAsync_message
     printf("     topic: %s\n", topicName);
     printf("   message: ");
 
-    payloadptr = message->payload;
+    payloadptr = (char *)message->payload;
+
+
+
     for(i=0; i<message->payloadlen; i++)
     {
         putchar(*payloadptr++);
@@ -164,7 +167,7 @@ int recv_data(char *str)
         message = (MQTTAsync_message*)ListPopTail(recv_msg_list);
         if(message != nullptr) 
         {
-            strncpy(str, message->payload, message->payloadlen);
+            strncpy(str, (char *)message->payload, message->payloadlen);
             str[message->payloadlen] = 0;
             MQTTAsync_freeMessage(&message);
 

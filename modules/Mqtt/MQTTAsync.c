@@ -56,8 +56,6 @@
 #include "StackTrace.h"
 #include "Heap.h"
 
-#include "MQTTUtil.h"
-
 #define URI_TCP "tcp://"
 
 #include "VersionInfo.h"
@@ -665,20 +663,16 @@ MQTTAsync_queuedCommand* MQTTAsync_restoreCommand(char* buffer, int buflen)
 	memset(qcommand, '\0', sizeof(MQTTAsync_queuedCommand));
 	command = &qcommand->command;
 	
-	//command->type = *(int*)ptr;
-	command->type = getint(ptr);
+	command->type = *(int*)ptr;
 	ptr += sizeof(int);
 	
-	//command->token = *(MQTTAsync_token*)ptr;
-	command->token = getMQTTAsync_token(ptr);
+	command->token = *(MQTTAsync_token*)ptr;
 	ptr += sizeof(MQTTAsync_token);
 
 	switch (command->type)
 	{
 		case SUBSCRIBE:
-			//command->details.sub.count = *(int*)ptr;
-			command->details.sub.count = getint(ptr);
-
+			command->details.sub.count = *(int*)ptr;
 			ptr += sizeof(int);
 				
 			for (i = 0; i < command->details.sub.count; ++i)
@@ -689,25 +683,22 @@ MQTTAsync_queuedCommand* MQTTAsync_restoreCommand(char* buffer, int buflen)
 				strcpy(command->details.sub.topics[i], ptr);
 				ptr += data_size;
 				
-				//command->details.sub.qoss[i] = *(int*)ptr;
-				command->details.sub.qoss[i] = getint(ptr);
+				command->details.sub.qoss[i] = *(int*)ptr;
 				ptr += sizeof(int);
 			}			
 			break;
 			
 		case UNSUBSCRIBE:
-			//command->details.sub.count = *(int*)ptr;
-			command->details.sub.count = getint(ptr);
+			command->details.sub.count = *(int*)ptr;
 			ptr += sizeof(int);
 				
 			for (i = 0; i < command->details.unsub.count; ++i)
 			{
-				size_t data_size1 = strlen(ptr) + 1;
-
+				size_t data_size = strlen(ptr) + 1;
 				
-				command->details.unsub.topics[i] = malloc(data_size1);
+				command->details.unsub.topics[i] = malloc(data_size);
 				strcpy(command->details.unsub.topics[i], ptr);
-				ptr += data_size1;
+				ptr += data_size;
 			}			
 			break;
 			
@@ -717,9 +708,7 @@ MQTTAsync_queuedCommand* MQTTAsync_restoreCommand(char* buffer, int buflen)
 			strcpy(command->details.pub.destinationName, ptr);
 			ptr += data_size;
 			
-			//command->details.pub.payloadlen = *(int*)ptr;
-			command->details.pub.payloadlen = getint(ptr);
-
+			command->details.pub.payloadlen = *(int*)ptr;
 			ptr += sizeof(int);
 			
 			data_size = command->details.pub.payloadlen;
@@ -727,13 +716,10 @@ MQTTAsync_queuedCommand* MQTTAsync_restoreCommand(char* buffer, int buflen)
 			memcpy(command->details.pub.payload, ptr, data_size);
 			ptr += data_size;
 			
-			//command->details.pub.qos = *(int*)ptr;
-			command->details.pub.qos = getint(ptr);
+			command->details.pub.qos = *(int*)ptr;
 			ptr += sizeof(int);
 			
-			//command->details.pub.retained = *(int*)ptr;
-			command->details.pub.retained = getint(ptr);
-
+			command->details.pub.retained = *(int*)ptr;
 			ptr += sizeof(int);	
 			break;
 			
@@ -1634,8 +1620,8 @@ int MQTTAsync_completeConnection(MQTTAsyncs* m, MQTTPacket* pack)
 
 				while (ListNextElement(m->c->outboundMsgs, &outcurrent))
 				{
-					Messages* m1 = (Messages*)(outcurrent->content);
-					m1->lastTouch = 0;
+					Messages* m = (Messages*)(outcurrent->content);
+					m->lastTouch = 0;
 				}
 				MQTTProtocol_retry((time_t)0, 1, 1);
 				if (m->c->connected != 1)
@@ -1713,7 +1699,7 @@ thread_return_type WINAPI MQTTAsync_receiveThread(void* n)
 				qEntry* qe = (qEntry*)(m->c->messageQueue->first->content);
 				int topicLen = qe->topicLen;
 
-				if (strlen(qe->topicName) == (size_t)topicLen)
+				if (strlen(qe->topicName) == topicLen)
 					topicLen = 0;
 
 				if (m->ma)
@@ -1738,9 +1724,9 @@ thread_return_type WINAPI MQTTAsync_receiveThread(void* n)
 				if (pack->header.bits.type == CONNACK)
 				{
 					int sessionPresent = ((Connack*)pack)->flags.bits.sessionPresent;
-					int rc1 = MQTTAsync_completeConnection(m, pack);
+					int rc = MQTTAsync_completeConnection(m, pack);
 					
-					if (rc1 == MQTTASYNC_SUCCESS)
+					if (rc == MQTTASYNC_SUCCESS)
 					{
 						if (m->serverURIcount > 0)
 							Log(TRACE_MIN, -1, "Connect succeeded to %s", 
@@ -2972,7 +2958,7 @@ int pubCompare(void* a, void* b)
 int MQTTAsync_getPendingTokens(MQTTAsync handle, MQTTAsync_token **tokens)
 {
 	int rc = MQTTASYNC_SUCCESS;
-	MQTTAsyncs* m1 = handle;
+	MQTTAsyncs* m = handle;
 	ListElement* current = NULL;
 	int count = 0;
 
@@ -2980,7 +2966,7 @@ int MQTTAsync_getPendingTokens(MQTTAsync handle, MQTTAsync_token **tokens)
 	MQTTAsync_lock_mutex(mqttasync_mutex);
 	*tokens = NULL;
 
-	if (m1 == NULL)
+	if (m == NULL)
 	{
 		rc = MQTTASYNC_FAILURE;
 		goto exit;
@@ -2991,11 +2977,11 @@ int MQTTAsync_getPendingTokens(MQTTAsync handle, MQTTAsync_token **tokens)
 	{
 		MQTTAsync_queuedCommand* cmd = (MQTTAsync_queuedCommand*)(current->content);
 
-		if (cmd->client == m1)
+		if (cmd->client == m)
 			count++;
 	}
-	if (m1->c)
-		count += m1->c->outboundMsgs->count;
+	if (m->c)
+		count += m->c->outboundMsgs->count;
 	if (count == 0)
 		goto exit; /* no tokens to return */
 	*tokens = malloc(sizeof(MQTTAsync_token) * (count + 1));  /* add space for sentinel at end of list */
@@ -3007,18 +2993,18 @@ int MQTTAsync_getPendingTokens(MQTTAsync handle, MQTTAsync_token **tokens)
 	{
 		MQTTAsync_queuedCommand* cmd = (MQTTAsync_queuedCommand*)(current->content);
 
-		if (cmd->client == m1)
+		if (cmd->client == m)
 			(*tokens)[count++] = cmd->command.token;
 	}
 
 	/* Now add the inflight messages */
-	if (m1->c && m1->c->outboundMsgs->count > 0)
+	if (m->c && m->c->outboundMsgs->count > 0)
 	{
 		current = NULL;
-		while (ListNextElement(m1->c->outboundMsgs, &current))
+		while (ListNextElement(m->c->outboundMsgs, &current))
 		{
-			Messages* m2 = (Messages*)(current->content);
-			(*tokens)[count++] = m2->msgid;
+			Messages* m = (Messages*)(current->content);
+			(*tokens)[count++] = m->msgid;
 		}
 	}
 	(*tokens)[count] = -1; /* indicate end of list */
@@ -3061,8 +3047,8 @@ int MQTTAsync_isComplete(MQTTAsync handle, MQTTAsync_token dt)
 		current = NULL;
 		while (ListNextElement(m->c->outboundMsgs, &current))
 		{
-			Messages* m1 = (Messages*)(current->content);
-			if (m1->msgid == dt)
+			Messages* m = (Messages*)(current->content);
+			if (m->msgid == dt)
 				goto exit;
 		}
 	}
