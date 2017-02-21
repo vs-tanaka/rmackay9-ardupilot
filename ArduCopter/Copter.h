@@ -144,7 +144,6 @@ public:
 #endif
     friend class AP_Arming_Copter;
    
-
     Copter(void);
 
     // HAL::Callbacks implementation.
