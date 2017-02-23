@@ -29,7 +29,7 @@
 #endif
 
 
-#define ADDRESS     "tcp://localhost:1883"
+#define ADDRESS     "tcp://160.16.96.11:8883"
 #define CLIENTID    "ExampleClientSub"
 #define TOPIC       "MQTT Examplessub"
 #define PAYLOAD     "Hello World!"
@@ -63,6 +63,9 @@ void connlost_sub(void *context, char *cause)
 	printf("Reconnecting\n");
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;
+        conn_opts.username = "aptj";
+        conn_opts.password ="aptj-mqtt";
+
 	if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start connect, return code %d\n", rc);
@@ -207,6 +210,8 @@ int start_subscribe(void)
 
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;
+        conn_opts.username = "aptj";
+        conn_opts.password ="aptj-mqtt";
 	conn_opts.onSuccess = onConnect_sub;
 	conn_opts.onFailure = onConnectFailure_sub;
 	conn_opts.context = client;

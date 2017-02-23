@@ -46,6 +46,11 @@ AP_Telemetry_MQTT::AP_Telemetry_MQTT(AP_Telemetry &frontend, AP_HAL::UARTDriver*
     printf("AP_Telemetry_MQTT");
     init_subscribe();
 
+    connect_timer = 20;
+    stage = 3;
+    connect_timer_sub = 20;
+    stage_sub = 2;
+
 }
 
 

@@ -18,7 +18,7 @@
 #include "../../modules/Mqtt/MQTTAsync.h"
 
 
-#define ADDRESS     "tcp://localhost:1883"
+#define ADDRESS     "tcp://160.16.96.11:8883"
 
 #define CLIENTID    "ExampleClientPub"
 #define TOPIC       "MQTT Examples"
@@ -44,6 +44,9 @@ void connlost(void *context, char *cause)
 	printf("Reconnecting\n");
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;
+        conn_opts.username = "aptj";
+        conn_opts.password ="aptj-mqtt";
+
 	if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start connect, return code %d\n", rc);
@@ -154,6 +157,9 @@ void *start_connect()
     
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;
+        conn_opts.username = "aptj";
+        conn_opts.password ="aptj-mqtt";
+
 	conn_opts.onSuccess = onConnect;
 	conn_opts.onFailure = onConnectFailure;
 	conn_opts.context = client;
