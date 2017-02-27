@@ -15,6 +15,7 @@
 
 #include "AP_Telemetry_MQTT.h"
 #include <stdio.h>
+#include <time.h>
 
 
 #include "../../modules/Mqtt/MQTTAsync.h"
@@ -37,6 +38,9 @@ extern int recv_data(char *str);
 extern void start_send_text(void* context, const char *str);
 extern int sub_connect_stat;
 extern void init_subscribe();
+extern char clientid_pub[100];
+extern char topic_pub[100];
+
 
 
 AP_Telemetry_MQTT::AP_Telemetry_MQTT(AP_Telemetry &frontend, AP_HAL::UARTDriver* uart) :
@@ -47,6 +51,8 @@ AP_Telemetry_MQTT::AP_Telemetry_MQTT(AP_Telemetry &frontend, AP_HAL::UARTDriver*
 
     connect_timer = 20;
     stage = 3;
+    srand((unsigned)time(NULL));
+    sprintf(clientid_pub,"%d",rand() %10000);
 
 }
 
@@ -57,6 +63,7 @@ void AP_Telemetry_MQTT::send_text(const char *str)
     
     if((connected == 1) && (finished == 0) && (stage == 2) && (client != NULL))
     {
+        sprintf(topic_pub,"$ardupilot/copter/quad/log/%04d", mavlink_system.sysid);
         start_send_text(client, str);
     }
 
